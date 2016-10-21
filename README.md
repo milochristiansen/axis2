@@ -27,6 +27,8 @@ For example the following two paths are equivalent:
 
 Obviously you should always use the first form, but the second is still legal (barely)
 
+This copy of AXIS VFS was downloaded from my public repository. This repository is used strictly for releases and third party contributions, I do not use it for normal development.
+
 AXIS VFS "officially" stands for Absurdly eXtremely Incredibly Simple Virtual File System (adjectives are
 good for making cool acronyms!). If you think the name is stupid (it is) you can just call it AXIS and
 forget what it is supposed to mean, after all the "official" name is more of a joke than anything...
