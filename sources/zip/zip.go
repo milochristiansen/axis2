@@ -22,7 +22,7 @@ misrepresented as being the original software.
 
 package zip
 
-import "dctech/axis2"
+import "github.com/milochristiansen/axis2"
 
 import "io"
 import "bytes"
