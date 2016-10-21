@@ -27,7 +27,7 @@ import "os"
 import "io"
 import "io/ioutil"
 
-import "dctech/axis2"
+import "github.com/milochristiansen/axis2"
 
 type osFile string
 
