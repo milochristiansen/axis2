@@ -22,6 +22,8 @@ misrepresented as being the original software.
 
 package axis2
 
+import "os"
+
 type ErrTyp int
 const (
 	// The path does not point to a valid item.
@@ -33,8 +35,8 @@ const (
 	// The action cannot be done with the item (for example trying to write a directory).
 	ErrBadAction
 	
-	// The given path is not absolute.
-	ErrPathRelative
+	// The given path is not absolute or it contains invalid characters.
+	ErrBadPath
 	
 	// An error from an external library, with an attached AXIS path.
 	ErrRaw
@@ -59,8 +61,25 @@ func wrapError(err error, path string) error {
 		return e
 	}
 	
-	// TODO: Detect common OS errors and convert them directly to AXIS equivalents instead of wrapping.
+	// Don't wrap os.PathError values directly (we don't want the error message to include the OS path).
+	if e, ok := err.(*os.PathError); ok {
+		// Convert file not found directly to the equivalent AXIS error
+		if e.Err == os.ErrNotExist {
+			return &Error{
+				Path: path,
+				Typ: ErrNotFound,
+			}
+		}
+		
+		// Unwrap, then rewrap any other PathErrors
+		return &Error{
+			Path: path,
+			Typ: ErrRaw,
+			Err: e.Err,
+		}
+	}
 	
+	// Unknown error, just wrap it.
 	return &Error{
 		Path: path,
 		Typ: ErrRaw,
@@ -70,27 +89,37 @@ func wrapError(err error, path string) error {
 
 // Error wraps a path and an error type, together with an error from an external library if applicable.
 // Errors returned by API functions will be of this type.
+// 
+// Implementers of File or Dir do not need to use this type for their return values, but they are encouraged
+// to do so (any returned error will be wrapped if it is not already of this type).
 type Error struct {
-	Path string // Automatically set by the API functions before return
+	// Automatically set by the API functions before return, don't write this field!
+	Path string
+	
+	// The error type. If you want to intelligently handle errors from this library this field will be invaluable.
+	// See the ErrTyp constants for a list of valid values for this field.
 	Typ ErrTyp
 	
-	// If Typ == ErrRaw
+	// If Typ == ErrRaw this will contain an error value originating from a specific implementation of File or Dir.
 	Err error
 }
 
+// Error prints the path associated with the error prefixed by a short string explanation of the error type.
+// 
+// Raw (wrapped) errors simply have "AXIS path: <path>" tacked onto the output of their own Error function.
 func (err *Error) Error() string {
 	switch err.Typ {
 	case ErrNotFound:
-		return "File/Dir Not Found: " + err.Path
+		return "No item found at path: " + err.Path
 	case ErrReadOnly:
-		return "File/Dir Read-only: " + err.Path
+		return "Item at path is read-only: " + err.Path
 	case ErrBadAction:
-		return "The DataSource does not allow that action: " + err.Path
-	case ErrPathRelative:
-		return "The path is not absolute: " + err.Path
+		return "Illegal action for item at path: " + err.Path
+	case ErrBadPath:
+		return "Path is invalid: " + err.Path
 	case ErrRaw:
 		return err.Err.Error() + " AXIS path: " + err.Path
 	default:
-		return "Invalid Error Code: " + err.Path
+		return "Invalid error code: " + err.Path
 	}
 }

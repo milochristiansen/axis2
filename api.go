@@ -150,7 +150,7 @@ func (fs *FileSystem) Dump() {
 func (fs *FileSystem) Mount(path string, ds DataSource, rw bool) error {
 	dirs := validatePath(path)
 	if dirs == nil {
-		return &Error{Path: path, Typ: ErrPathRelative}
+		return &Error{Path: path, Typ: ErrBadPath}
 	}
 	
 	// Ensure the mounted item implements either File or Dir (or both).
@@ -174,7 +174,7 @@ func (fs *FileSystem) Mount(path string, ds DataSource, rw bool) error {
 func (fs *FileSystem) Unmount(path string, r bool) error {
 	dirs := validatePath(path)
 	if dirs == nil {
-		return &Error{Path: path, Typ: ErrPathRelative}
+		return &Error{Path: path, Typ: ErrBadPath}
 	}
 	
 	fs.w = unmount(dirs, fs.w)
@@ -345,7 +345,7 @@ func (fs *FileSystem) GetDSAt(path string, create, r bool) (DataSource, error) {
 func (fs *FileSystem) GetDSsAt(path string, create, r bool) ([]DataSource, error) {
 	dirs := validatePath(path)
 	if dirs == nil {
-		return nil, &Error{Path: path, Typ: ErrPathRelative}
+		return nil, &Error{Path: path, Typ: ErrBadPath}
 	}
 	
 	var sources []*source
@@ -471,7 +471,11 @@ func (fs *FileSystem) Delete(path string) error {
 // List returns a slice of the names of all the items available in the given Dir. If the item at the path is not a Dir
 // and is not a subset of any mount points this returns nil.
 // 
-// Note that if the path is a mount point subset this may return more mount point subsets, not actual data sources!
+// The order of the returned list is undefined, or more correctly, is defined by the individual Dir implementations.
+// Most of the time this means lexically by filename, but not always.
+// 
+// If the path is a mount point subset this may return more mount point subsets or a mix of mount point subsets and
+// data sources!
 func (fs *FileSystem) List(path string) []string {
 	dss, err := fs.GetDSsAt(path, false, true)
 	if err != nil {
@@ -499,6 +503,9 @@ func (fs *FileSystem) List(path string) []string {
 
 // ListDirs returns a slice of all the items that are Dirs in the given Dir. If the item at the path is not a Dir
 // or mount point subset this returns nil.
+// 
+// The order of the returned list is undefined, or more correctly, is defined by the individual Dir implementations.
+// Most of the time this means lexically by filename, but not always.
 // 
 // If the path is a mount point subset this may return more mount point subsets or a mix of mount point subsets and
 // data sources!
@@ -535,6 +542,9 @@ func (fs *FileSystem) ListDirs(path string) []string {
 
 // ListFiles returns a slice of all the items that are Files in the given Dir. If the item at the path is not a Dir
 // or if the Dir contains no Files this returns nil.
+// 
+// The order of the returned list is undefined, or more correctly, is defined by the individual Dir implementations.
+// Most of the time this means lexically by filename, but not always.
 func (fs *FileSystem) ListFiles(path string) []string {
 	dss, err := fs.GetDSsAt(path, false, true)
 	if err != nil {
