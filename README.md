@@ -32,3 +32,13 @@ This copy of AXIS VFS was downloaded from my public repository. This repository 
 AXIS VFS "officially" stands for Absurdly eXtremely Incredibly Simple Virtual File System (adjectives are
 good for making cool acronyms!). If you think the name is stupid (it is) you can just call it AXIS and
 forget what it is supposed to mean, after all the "official" name is more of a joke than anything...
+
+## Changes:
+
+This documents changes listed by the date I added them to the repository.
+
+### 2016Oct28
+
+* Changed the error type returned for an invalid path so it makes more sense.
+* Updated a lot of documentation comments with more info.
+* Added an example.
